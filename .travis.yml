@@ -1,0 +1,27 @@
+sudo : required
+
+services:
+    - docker
+
+    before_install:
+        - docker build -t oalfatyan/react-test -f ./client/dockerfile.dev ./client #Specify the location of the dockerfile.dev ./client means look into the client directory and search for the context
+
+    script:
+        - docker run oalfatyan/react-test npm test -- --coverage
+    after_success:
+        -docker build -t oalfatyan/multi-client ./client
+        -docker build -t oalfatyan/multi-ngnix ./ngnix
+        -docker build -t oalfatyan/multi-server ./server
+        -docker build -t oalfatyan/multi-worker ./worker
+
+        #login to docker cli In order to decrypt the keys go to travis CI >> more options >> settings >>> environment variables >>> add a name AWS_ACCESS_KEY and add the value >>> add AWS_Secret_key and add the value
+        #echo will retrieve the docker password and put it to the second part
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+        # take all docker images and push them to docker hub
+
+        -docker push oalfatyan/multi-client
+        -docker push oalfatyan/multi-nginx
+        -docker push oalfatyan/multi-server
+        -docker push oalfatyan/multi-worker
+        
